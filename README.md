@@ -2,6 +2,8 @@
 
 **A lightning-fast, zero-setup HTML, CSS, and JavaScript prototyping environment.**
 
+[**View Live Demo**](https://immanuel-thomas-j.github.io/rapidforge/)
+
 RapidForge is a single-file web application that gives you a complete, professional IDE experience directly in your browser. It is perfect for rapid UI prototyping, debugging components, or learning frontend development without the hassle of setting up local servers or build tools.
 
 ## Features
@@ -15,13 +17,13 @@ RapidForge is a single-file web application that gives you a complete, professio
 * **Layout Debugger:** "Ghost Mode" outlines all elements on the page to help you fix CSS layout issues.
 * **Export Ready:** Download your active environment as a clean `index.html` file with a single click.
 
-## Quick Start
+## Local Usage
 
 Because RapidForge is built entirely in vanilla web technologies, there are zero dependencies to install. 
 
 1. Clone or download this repository.
 2. Double-click `index.html` to open it in your browser.
-3. Start coding!
+3. Start coding.
 
 ## Deployment
 
