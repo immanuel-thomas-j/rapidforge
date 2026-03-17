@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RapidForge - A lightning-fast, real-time HTML, CSS, and JavaScript prototyping environment.">
+    <meta name="theme-color" content="#09090b">
+    <title>RapidForge | Web Studio</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'></polygon></svg>">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/material-ocean.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/eclipse.min.css"> <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/dialog/dialog.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.css">
+    
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <style>
+        :root {
+            /* Default Dark Mode */
+            --bg-root: #09090b;       
+            --bg-panel: #18181b;      
+            --bg-input: #27272a;      
+            --bg-hover: #3f3f46;      
+            --border: #3f3f46;        
+            --border-light: #52525b;  
+            
+            --accent: #6366f1;        
+            --accent-hover: #4f46e5;  
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            
+            --text-main: #f4f4f5;     
+            --text-muted: #a1a1aa;    
+            
+            /* Dynamic UI Variables */
+            --brand-text-start: #ffffff;
+            --brand-text-end: #a1a1aa;
+            --brand-svg-bg1: var(--bg-input);
+            --brand-svg-bg2: var(--bg-panel);
+            --cm-bg: #0f111a;
+            --cm-border: rgba(255,255,255,0.05);
+            --cm-active-line: rgba(255, 255, 255, 0.03);
+            
+            --log-warn-text: #fbbf24;
+            --log-warn-bg: rgba(251, 191, 36, 0.05);
+            --log-error-text: #f87171;
+            --log-error-bg: rgba(248, 113, 113, 0.05);
+
+            --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-code: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --highlight-color: rgba(99, 102, 241, 0.4);
+            --current-match-color: rgba(99, 102, 241, 0.8);
+        }
+
+        /* Light Mode Override */
+        [data-theme="light"] {
+            --bg-root: #f4f4f5;       
+            --bg-panel: #ffffff;      
+            --bg-input: #e4e4e7;      
+            --bg-hover: #d4d4d8;      
+            --border: #d4d4d8;        
+            --border-light: #a1a1aa;  
+            
+            --text-main: #18181b;     
+            --text-muted: #52525b;    
+            
+            --brand-text-start: #18181b;
+            --brand-text-end: #52525b;
+            --brand-svg-bg1: #ffffff;
+            --brand-svg-bg2: #f4f4f5;
+            --cm-bg: #ffffff;
+            --cm-border: rgba(0,0,0,0.05);
+            --cm-active-line: rgba(0, 0, 0, 0.03);
+
+            --log-warn-text: #d97706;
+            --log-warn-bg: rgba(245, 158, 11, 0.08);
+            --log-error-text: #dc2626;
+            --log-error-bg: rgba(220, 38, 38, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; transition: background-color 0.2s ease, border-color 0.2s ease; }
+        
+        body { 
+            height: 100vh; background: var(--bg-root); color: var(--text-main); 
+            font-family: var(--font-ui); display: grid; grid-template-rows: 56px 1fr 28px; overflow: hidden; 
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-root); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; border: 2px solid var(--bg-root); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+        /* Header */
+        header { 
+            background: var(--bg-panel); border-bottom: 1px solid var(--border); 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; user-select: none; z-index: 50;
+        }
+        
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-svg {
+            width: 32px; height: 32px; background: linear-gradient(135deg, var(--brand-svg-bg1), var(--brand-svg-bg2));
+            border: 1px solid var(--border); border-radius: var(--radius-md);
+            display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .brand-text {
+            font-weight: 800; font-size: 16px; letter-spacing: -0.5px;
+            background: linear-gradient(to right, var(--brand-text-start), var(--brand-text-end));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* Controls */
+        .controls { display: flex; gap: 8px; align-items: center; }
+        select, .btn { 
+            background: transparent; color: var(--text-muted); border: 1px solid transparent; 
+            padding: 6px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+            cursor: pointer; display: flex; align-items: center; gap: 6px; 
+        }
+        select { 
+            background: var(--bg-input); border: 1px solid var(--border); color: var(--text-main); 
+            appearance: none; padding-right: 28px; background-repeat: no-repeat; background-position: right 8px center; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); 
+        }
+        select:hover { border-color: var(--border-light); }
+        .btn:hover { background: var(--bg-input); color: var(--text-main); }
+        
+        .btn-primary { background: var(--accent); color: white; border: 1px solid var(--accent-hover); box-shadow: 0 2px 10px var(--accent-glow); }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); color: white; }
+        
+        .icon-only { padding: 6px; }
+        .icon-only svg { width: 16px; height: 16px; }
+        .icon-only.active { background: var(--bg-input); color: var(--accent); border-color: var(--border); }
+        .divider { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+
+        /* Workspace */
+        .workspace { display: flex; height: 100%; overflow: hidden; position: relative; }
+        .editor-col { width: 50%; display: flex; flex-direction: column; background: var(--cm-bg); position: relative; }
+        
+        .CodeMirror { height: 100%; font-family: var(--font-code); font-size: 14px; line-height: 1.6; padding-top: 8px; background: transparent; }
+        .CodeMirror-activeline-background { background: var(--cm-active-line) !important; }
+        .CodeMirror-gutters { background: var(--cm-bg) !important; border-right: 1px solid var(--cm-border); }
+        .cm-search-match { background-color: var(--highlight-color); }
+        .cm-search-match-active { background-color: var(--current-match-color); border-radius: 2px; }
+
+        /* Search Widget */
+        .search-widget { 
+            position: absolute; top: 12px; right: 24px; background: var(--bg-panel); width: 340px; 
+            border-radius: var(--radius-md); box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px var(--border); 
+            z-index: 100; display: none; overflow: hidden;
+        }
+        .search-widget.visible { display: block; animation: slideDown 0.15s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .search-row { display: flex; padding: 8px; gap: 6px; align-items: center; border-bottom: 1px solid var(--bg-root); }
+        .search-input-container { flex: 1; display: flex; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); align-items: center; padding-right: 4px; }
+        .search-input-container:focus-within { border-color: var(--accent); }
+        .search-widget input { background: transparent; border: none; color: var(--text-main); width: 100%; padding: 6px 10px; font-size: 13px; font-family: var(--font-ui); }
+        
+        .search-actions button { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; font-weight: 600; font-size: 11px;}
+        .search-actions button:hover { background: var(--bg-hover); color: var(--text-main); }
+        .search-actions button.active { background: var(--accent); color: white; }
+        
+        .match-count { font-size: 12px; color: var(--text-muted); margin: 0 8px; white-space: nowrap; min-width: 45px; text-align: right; }
+        .nav-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: var(--radius-sm); display: grid; place-items: center; }
+        .nav-btn:hover { background: var(--bg-input); color: var(--text-main); }
+
+        /* Gutter */
+        .gutter { width: 4px; background: var(--bg-root); cursor: col-resize; position: relative; z-index: 10; }
+        .gutter:hover, .gutter:active { background: var(--accent); }
+        .gutter::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 2px; height: 24px; background: var(--border-light); border-radius: 2px; }
+
+        /* Preview */
+        .preview-col { width: 50%; display: flex; flex-direction: column; background: var(--bg-root); position: relative; }
+        .iframe-stage { 
+            flex: 1; position: relative; width: 100%; height: 100%; display: grid; place-items: center; 
+            overflow: auto; padding: 0; background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 24px 24px;
+        }
+        
+        iframe { background: white; border: none; transition: width 0.3s, height 0.3s, border-radius 0.3s, box-shadow 0.3s; display: block; }
+        iframe.mode-desktop { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+        iframe.mode-mobile { 
+            width: 375px; height: 812px; border-radius: 40px; position: relative; 
+            border: 12px solid #18181b; flex-shrink: 0; box-shadow: 0 0 0 1px #3f3f46, 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Console */
+        .console-wrap { 
+            height: 220px; background: var(--bg-panel); border-top: 1px solid var(--border); 
+            display: flex; flex-direction: column; font-family: var(--font-code); 
+            transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 20; position: absolute; bottom: 0; left: 0; right: 0; 
+        }
+        .console-wrap.minimized { height: 32px; }
+        
+        .console-header { 
+            padding: 0 16px; height: 32px; background: var(--bg-input); display: flex; align-items: center; 
+            justify-content: space-between; font-size: 12px; font-weight: 600; color: var(--text-muted); 
+            cursor: pointer; border-bottom: 1px solid var(--border); 
+        }
+        .console-header:hover { color: var(--text-main); }
+        
+        .console-logs { flex: 1; overflow-y: auto; padding: 8px 0; font-size: 13px; color: var(--text-main); }
+        .log-row { padding: 4px 16px; border-bottom: 1px solid transparent; display: flex; gap: 12px; word-break: break-all; }
+        .log-row:hover { background: rgba(128,128,128,0.05); }
+        .log-time { color: var(--text-muted); min-width: 70px; font-size: 12px; user-select: none; }
+        
+        .log-warn { color: var(--log-warn-text); background: var(--log-warn-bg); }
+        .log-error { color: var(--log-error-text); background: var(--log-error-bg); }
+
+        /* Footer */
+        footer { 
+            background: var(--accent); display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; font-size: 12px; color: white; font-weight: 500;
+        }
+        .toggle-label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: white; }
+        .toggle-label input { accent-color: white; cursor: pointer; }
+        .resizing iframe { pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <div class="brand-svg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+            </div>
+            <span class="brand-text">RapidForge</span>
+        </div>
+        <div class="controls">
+            <select id="lib-select" onchange="injectLib(this.value)" aria-label="Inject Library">
+                <option value="">+ Add Dependency</option>
+                <option value="tailwind">Tailwind CSS (CDN)</option>
+                <option value="bootstrap">Bootstrap 5 (CDN)</option>
+                <option value="jquery">jQuery 3.x</option>
+            </select>
+            <div class="divider"></div>
+            <button class="btn icon-only" onclick="toggleSearch()" aria-label="Find in Code" title="Find (Ctrl+F)"><i data-feather="search"></i></button>
+            <button class="btn icon-only" onclick="toggleSearch(); toggleReplaceRow(true);" aria-label="Replace in Code" title="Replace"><i data-feather="edit-3"></i></button>
+            <button class="btn icon-only" onclick="formatCode()" aria-label="Format Code" title="Auto Format"><i data-feather="align-left"></i></button>
+            <div class="divider"></div>
+            <button class="btn icon-only" onclick="toggleTheme()" aria-label="Toggle Light/Dark Theme" title="Toggle Theme"><i data-feather="sun" id="theme-icon"></i></button>
+            <button class="btn icon-only" id="btn-ghost" onclick="toggleGhostMode()" aria-label="Toggle CSS Debugger" title="CSS Layout Debugger"><i data-feather="crosshair"></i></button>
+            <button class="btn icon-only" onclick="openNewTab()" aria-label="Open in New Tab" title="Preview in New Tab"><i data-feather="external-link"></i></button>
+            <div class="divider"></div>
+            <button class="btn icon-only active" id="btn-desktop" onclick="setDevice('desktop')" aria-label="Desktop View" title="Desktop View"><i data-feather="monitor"></i></button>
+            <button class="btn icon-only" id="btn-mobile" onclick="setDevice('mobile')" aria-label="Mobile View" title="Mobile View"><i data-feather="smartphone"></i></button>
+            <div class="divider"></div>
+            <button class="btn btn-primary" onclick="downloadProject()" aria-label="Export Project"><i data-feather="download" style="width: 14px; height: 14px;"></i> Export HTML</button>
+        </div>
+    </header>
+
+    <main class="workspace" id="workspace">
+        <section class="editor-col" id="left-pane" aria-label="Code Editor">
+            <div id="search-widget" class="search-widget" role="search">
+                <div class="search-row">
+                    <button class="nav-btn" onclick="toggleReplaceRow()" aria-label="Toggle Replace"><i data-feather="chevron-right" id="replace-toggle-icon"></i></button>
+                    <div class="search-input-container">
+                        <input type="text" id="find-input" placeholder="Find..." aria-label="Find text">
+                        <div class="search-actions">
+                            <button id="match-case-btn" onclick="toggleMatchCase()" aria-label="Toggle Match Case" title="Match Case">Aa</button>
+                        </div>
+                    </div>
+                    <span id="match-count" class="match-count" aria-live="polite">0 of 0</span>
+                    <button class="nav-btn" onclick="findNext(false)" aria-label="Find Previous" title="Previous"><i data-feather="arrow-up"></i></button>
+                    <button class="nav-btn" onclick="findNext(true)" aria-label="Find Next" title="Next"><i data-feather="arrow-down"></i></button>
+                    <button class="nav-btn" onclick="closeSearch()" aria-label="Close Search"><i data-feather="x"></i></button>
+                </div>
+                <div class="search-row" id="replace-row" style="display:none; padding-left: 38px; border-bottom: none;">
+                    <div class="search-input-container">
+                        <input type="text" id="replace-input" placeholder="Replace with..." aria-label="Replace text">
+                    </div>
+                    <button class="nav-btn" onclick="replaceOne()" aria-label="Replace current" title="Replace"><i data-feather="check"></i></button>
+                    <button class="nav-btn" onclick="replaceAll()" aria-label="Replace all" title="Replace All"><i data-feather="layers"></i></button>
+                </div>
+            </div>
+            <textarea id="code-editor" aria-hidden="true"></textarea>
+        </section>
+
+        <div class="gutter" id="gutter" role="separator" aria-orientation="vertical"></div>
+
+        <section class="preview-col" id="right-pane" aria-label="Live Preview">
+            <div class="iframe-stage">
+                <iframe id="preview-frame" class="mode-desktop" title="Live Code Preview" sandbox="allow-scripts allow-same-origin allow-modals"></iframe>
+            </div>
+            <div class="console-wrap minimized" id="console-wrap">
+                <div class="console-header" onclick="toggleConsole()" role="button" tabindex="0" aria-expanded="false">
+                    <span style="display: flex; align-items: center; gap: 8px;"><i data-feather="terminal" style="width:14px; height:14px;"></i> CONSOLE</span>
+                    <div style="display:flex; gap:12px; align-items:center;">
+                        <span style="opacity:0.8; font-size: 14px;" onclick="clearConsole(event)" aria-label="Clear Console" title="Clear Console">⊘</span>
+                        <i data-feather="chevron-up" id="console-chevron"></i>
+                    </div>
+                </div>
+                <div class="console-logs" id="console-logs" aria-live="polite"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <label class="toggle-label"><input type="checkbox" id="vim-toggle" onchange="toggleVim(this.checked)"> Vim Keybindings</label>
+        <div id="res-display" aria-live="polite">Desktop Environment</div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/search/searchcursor.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/brace-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/fold/xml-fold.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/keymap/vim.min.js"></script>
+
+    <script>
+        feather.replace();
+
+        const defaultCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RapidForge Preview</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-50 min-h-screen flex items-center justify-center p-6">
+    
+    <div class="max-w-2xl text-center space-y-8">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-medium mb-4">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+            </span>
+            Environment Ready
+        </div>
+        
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight">
+            Build Faster with <br/>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">RapidForge</span>
+        </h1>
+        
+        <p class="text-lg text-zinc-400 max-w-xl mx-auto leading-relaxed">
+            Write, preview, and debug your HTML, CSS, and JS components in a beautiful, distraction-free workspace.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+            <button onclick="console.log('Action successful! ✅', { user: 'Admin', status: 200 })" class="w-full sm:w-auto px-8 py-3 bg-indigo-500 hover:bg-indigo-600 transition-all rounded-lg font-semibold shadow-lg shadow-indigo-500/20">
+                Test Object Log
+            </button>
+            <button onclick="console.warn('Network latency detected.')" class="w-full sm:w-auto px-8 py-3 bg-zinc-800 hover:bg-zinc-700 transition-all rounded-lg font-semibold border border-zinc-700">
+                Trigger Warning
+            </button>
+        </div>
+    </div>
+
+</body>
+</html>`;
+
+        const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+            mode: "htmlmixed", theme: "material-ocean", 
+            lineNumbers: true, lineWrapping: true,
+            styleActiveLine: true, matchBrackets: true, 
+            autoCloseBrackets: true, autoCloseTags: true,
+            foldGutter: true, gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+            extraKeys: {
+                "Ctrl-F": toggleSearch, "Cmd-F": toggleSearch,
+                "Ctrl-H": () => { toggleSearch(); toggleReplaceRow(true); },
+                "Esc": closeSearch
+            }
+        });
+        editor.setValue(localStorage.getItem('rapidforge-code') || defaultCode);
+
+        // --- THEME LOGIC ---
+        let isLightMode = localStorage.getItem('rapidforge-theme') === 'light';
+        
+        function applyTheme(light) {
+            const icon = document.getElementById('theme-icon');
+            if (light) {
+                document.documentElement.setAttribute('data-theme', 'light');
+                editor.setOption('theme', 'eclipse');
+                icon.setAttribute('data-feather', 'moon');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                editor.setOption('theme', 'material-ocean');
+                icon.setAttribute('data-feather', 'sun');
+            }
+            feather.replace();
+        }
+
+        function toggleTheme() {
+            isLightMode = !isLightMode;
+            localStorage.setItem('rapidforge-theme', isLightMode ? 'light' : 'dark');
+            applyTheme(isLightMode);
+        }
+
+        applyTheme(isLightMode); // Initialize theme on load
+
+        // --- SEARCH LOGIC ---
+        let searchState = { query: "", matchCase: false, matches: [], currentIndex: -1 };
+        let marks = [];
+        let activeMark = null;
+        let ghostMode = false;
+
+        const findInput = document.getElementById('find-input');
+        findInput.addEventListener('input', () => { searchState.query = findInput.value; performSearch(); });
+
+        function toggleSearch() {
+            document.getElementById('search-widget').classList.add('visible');
+            findInput.focus();
+            if (editor.getSelection()) { findInput.value = editor.getSelection(); searchState.query = findInput.value; performSearch(); }
+        }
+        function closeSearch() { document.getElementById('search-widget').classList.remove('visible'); clearMarks(); editor.focus(); }
+        function toggleReplaceRow(forceOpen) {
+            const row = document.getElementById('replace-row');
+            const icon = document.getElementById('replace-toggle-icon');
+            if (row.style.display === 'none' || forceOpen) { row.style.display = 'flex'; icon.setAttribute('data-feather', 'chevron-down'); }
+            else { row.style.display = 'none'; icon.setAttribute('data-feather', 'chevron-right'); }
+            feather.replace();
+        }
+        function toggleMatchCase() {
+            searchState.matchCase = !searchState.matchCase;
+            document.getElementById('match-case-btn').classList.toggle('active');
+            performSearch();
+        }
+        function clearMarks() { marks.forEach(m => m.clear()); marks = []; if(activeMark) activeMark.clear(); }
+        function performSearch() {
+            clearMarks(); searchState.matches = []; searchState.currentIndex = -1;
+            if (!searchState.query) { document.getElementById('match-count').innerText = "0 of 0"; return; }
+
+            const cursor = editor.getSearchCursor(searchState.query, null, { caseFold: !searchState.matchCase });
+            while (cursor.findNext()) {
+                searchState.matches.push({ from: cursor.from(), to: cursor.to() });
+                marks.push(editor.markText(cursor.from(), cursor.to(), { className: "cm-search-match" }));
+            }
+
+            const count = searchState.matches.length;
+            if (count > 0) { searchState.currentIndex = 0; highlightCurrent(0); document.getElementById('match-count').innerText = `1 of ${count}`; }
+            else { document.getElementById('match-count').innerText = "0 of 0"; }
+        }
+        function highlightCurrent(index) {
+            if (activeMark) activeMark.clear();
+            const match = searchState.matches[index];
+            editor.scrollIntoView(match.from, 200);
+            activeMark = editor.markText(match.from, match.to, { className: "cm-search-match-active" });
+            document.getElementById('match-count').innerText = `${index + 1} of ${searchState.matches.length}`;
+        }
+        function findNext(forward) {
+            if (searchState.matches.length === 0) return;
+            searchState.currentIndex = forward ? (searchState.currentIndex + 1) % searchState.matches.length : (searchState.currentIndex - 1 + searchState.matches.length) % searchState.matches.length;
+            highlightCurrent(searchState.currentIndex);
+        }
+        function replaceOne() {
+            if (searchState.matches.length === 0) return;
+            editor.replaceRange(document.getElementById('replace-input').value, searchState.matches[searchState.currentIndex].from, searchState.matches[searchState.currentIndex].to);
+            performSearch();
+        }
+        function replaceAll() {
+            if (!searchState.query) return;
+            const txt = document.getElementById('replace-input').value;
+            const cursor = editor.getSearchCursor(searchState.query, null, { caseFold: !searchState.matchCase });
+            editor.operation(() => { while (cursor.findNext()) cursor.replace(txt); });
+            performSearch();
+        }
+
+        editor.on("change", clearMarks);
+
+        // --- PREVIEW LOGIC ---
+        const iframe = document.getElementById('preview-frame');
+        const getInterceptor = (isGhost) => {
+            const ghostCSS = isGhost ? `* { outline: 1px dashed rgba(99, 102, 241, 0.5) !important; background: rgba(99, 102, 241, 0.02) !important; }` : '';
+            return '\x3Cscript>' + `
+            (function() {
+                if(${isGhost}) { const s = document.createElement('style'); s.innerHTML = \`${ghostCSS}\`; document.head.appendChild(s); }
+                
+                // Safe serialization to prevent circular reference crashes
+                const safeStringify = (obj) => {
+                    try { return JSON.stringify(obj, null, 2); } 
+                    catch(e) { return '[Complex/Circular Object]'; }
+                };
+
+                const log = console.log;
+                ['log', 'warn', 'error'].forEach(type => {
+                    const orig = console[type];
+                    console[type] = (...a) => {
+                        orig.apply(console, a);
+                        window.parent.postMessage({
+                            source: 'iframe-log',
+                            type,
+                            msg: a.map(v => typeof v === 'object' ? safeStringify(v) : String(v)).join(' ')
+                        }, '*');
+                    };
+                });
+                window.onerror = function(msg, url, line) { 
+                    window.parent.postMessage({source:'iframe-log', type:'error', msg: \`Error (Line \${line}): \${msg}\`}, '*'); 
+                    return false;
+                };
+            })();` + '\x3C/script>';
+        };
+
+        let timeoutId;
+        function updatePreview() {
+            const raw = editor.getValue();
+            localStorage.setItem('rapidforge-code', raw);
+            const finalCode = raw.includes('</body>') ? raw.replace('</body>', getInterceptor(ghostMode) + '</body>') : raw + getInterceptor(ghostMode);
+            iframe.srcdoc = finalCode;
+        }
+
+        // Debounce typing to prevent excessive re-renders on huge files
+        editor.on("change", () => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(updatePreview, 300);
+        });
+        setTimeout(updatePreview, 100);
+
+        function injectLib(lib) {
+            let cdn = '';
+            const code = editor.getValue();
+            if (lib === 'tailwind' && !code.includes('cdn.tailwindcss.com')) {
+                cdn = '\x3Cscript src="https://cdn.tailwindcss.com">\x3C/script>';
+            } else if (lib === 'bootstrap' && !code.includes('bootstrap.min.css')) {
+                cdn = `\n<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">\n<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">\x3C/script>`;
+            } else if (lib === 'jquery' && !code.includes('jquery-3.')) {
+                cdn = '\x3Cscript src="https://code.jquery.com/jquery-3.7.1.min.js">\x3C/script>';
+            }
+            if (cdn) {
+                editor.setValue(code.includes('</head>') ? code.replace('</head>', cdn + '\n</head>') : cdn + '\n' + code);
+            }
+            document.getElementById('lib-select').value = "";
+        }
+
+        function toggleGhostMode() {
+            ghostMode = !ghostMode;
+            document.getElementById('btn-ghost').classList.toggle('active', ghostMode);
+            updatePreview();
+        }
+
+        const gutter = document.getElementById('gutter'), wk = document.getElementById('workspace');
+        const leftPane = document.getElementById('left-pane'), rightPane = document.getElementById('right-pane');
+        let isDrag = false;
+
+        gutter.addEventListener('mousedown', () => { isDrag = true; wk.classList.add('resizing'); });
+        document.addEventListener('mouseup', () => { isDrag = false; wk.classList.remove('resizing'); });
+        document.addEventListener('mousemove', (e) => {
+            if (!isDrag) return;
+            const p = (e.clientX / window.innerWidth) * 100;
+            if (p > 15 && p < 85) {
+                leftPane.style.width = p + "%";
+                rightPane.style.width = (100 - p) + "%";
+            }
+        });
+
+        function setDevice(mode) {
+            const desk = document.getElementById('btn-desktop'), mob = document.getElementById('btn-mobile');
+            const iframe = document.getElementById('preview-frame');
+            const consoleWrap = document.getElementById('console-wrap');
+            if (mode === 'desktop') {
+                desk.classList.add('active'); mob.classList.remove('active');
+                iframe.className = "mode-desktop"; 
+                document.getElementById('res-display').innerText = 'Desktop Environment';
+            } else {
+                mob.classList.add('active'); desk.classList.remove('active');
+                iframe.className = "mode-mobile"; 
+                document.getElementById('res-display').innerText = 'Mobile Environment';
+                if(!consoleWrap.classList.contains('minimized')) toggleConsole();
+            }
+        }
+
+        function toggleConsole() { 
+            const wrap = document.getElementById('console-wrap');
+            wrap.classList.toggle('minimized'); 
+            const isMin = wrap.classList.contains('minimized');
+            document.getElementById('console-chevron').innerHTML = isMin ? '<polyline points="18 15 12 9 6 15"></polyline>' : '<polyline points="6 9 12 15 18 9"></polyline>';
+            wrap.setAttribute('aria-expanded', !isMin);
+            feather.replace();
+        }
+        
+        function clearConsole(e) { e.stopPropagation(); document.getElementById('console-logs').innerHTML = ''; }
+        function formatCode() { const total = editor.lineCount(); for(let i=0; i<total; i++) editor.indentLine(i); }
+        function toggleVim(e) { editor.setOption("keyMap", e ? "vim" : "default"); }
+        function openNewTab() { window.open(URL.createObjectURL(new Blob([editor.getValue()], {type:'text/html'})), '_blank'); }
+        function downloadProject() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([editor.getValue()],{type:'text/html'})); a.download='rapidforge-build.html'; a.click(); }
+        
+        window.addEventListener('message', (e) => {
+            if(e.data && e.data.source === 'iframe-log') {
+                const logs = document.getElementById('console-logs');
+                const formattedMsg = e.data.msg.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
+                logs.innerHTML += `<div class="log-row log-${e.data.type}"><div class="log-time">${new Date().toLocaleTimeString().split(' ')[0]}</div><div style="font-family: var(--font-code);">${formattedMsg}</div></div>`;
+                logs.scrollTop = logs.scrollHeight;
+            }
+        });
+
+        setDevice('desktop');
+    </script>
+</body>
+</html>
